@@ -1,0 +1,1620 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Đối chiếu Nhà Cung Cấp — Bếp ăn BV Đại học Y Hà Nội</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<!-- Thêm CDN Alpine.js để app hoạt động -->
+<script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+<style>
+  :root{
+    --paper:#F6F3EC; --ink:#22302A; --ink-soft:#5B6A62; --card:#FFFFFF; --line:#E3DECF;
+    --teal:#2F6F5E; --teal-soft:#E4EFEA; --amber:#B8853A; --amber-soft:#F6ECD9;
+    --brick:#B2452F; --brick-soft:#F7E6E1; --slate:#8D8574;
+  }
+  *{font-family:'Be Vietnam Pro','Segoe UI',Roboto,Helvetica,Arial,sans-serif; box-sizing:border-box;}
+  html,body{background:var(--paper); color:var(--ink);}
+  .font-num{font-variant-numeric: tabular-nums;}
+  [x-cloak]{display:none!important;}
+  ::-webkit-scrollbar{width:8px;height:8px;}
+  ::-webkit-scrollbar-thumb{background:#D8D2C0;border-radius:8px;}
+  .card{background:var(--card); border:1px solid var(--line); border-radius:16px;}
+  .btn-primary{background:var(--teal); color:#fff; transition:background .15s;}
+  .btn-primary:hover{background:#26594B;}
+  .btn-primary:disabled{background:#B9C4BE; cursor:not-allowed;}
+  .btn-secondary{background:#fff; border:1px solid var(--line); color:var(--ink);}
+  .btn-secondary:hover{background:#F1EEE4;}
+  .badge{display:inline-flex; align-items:center; gap:5px; padding:3px 11px; border-radius:999px; font-size:12.5px; font-weight:600; white-space:nowrap;}
+  .badge-teal{background:var(--teal-soft); color:var(--teal);}
+  .badge-amber{background:var(--amber-soft); color:var(--amber);}
+  .badge-brick{background:var(--brick-soft); color:var(--brick);}
+  .badge-gray{background:#EDEAE0; color:var(--slate);}
+  .dot{width:9px; height:9px; border-radius:50%; flex-shrink:0;}
+  .dot-teal{background:var(--teal);}
+  .dot-amber{background:var(--amber);}
+  .dot-brick{background:var(--brick);}
+  .dot-gray{background:var(--slate);}
+  .tab-btn{padding:10px 18px; border-radius:12px 12px 0 0; font-weight:600; color:var(--ink-soft); border-bottom:2px solid transparent; transition:all .15s;}
+  .tab-btn.active{color:var(--teal); border-bottom:2px solid var(--teal); background:var(--teal-soft);}
+  .tab-btn:not(.active):hover{color:var(--ink); background:#EFEBE0;}
+  .banner-teal{background:var(--teal-soft); border:1px solid #C4DBD1;}
+  .banner-amber{background:var(--amber-soft); border:1px solid #E8CE9E;}
+  .banner-brick{background:var(--brick-soft); border:1px solid #E9B9AC;}
+  .rail-item{position:relative; padding-left:26px;}
+  .rail-item::before{content:''; position:absolute; left:4px; top:6px; bottom:-14px; width:1px; background:var(--line);}
+  .rail-item:last-child::before{display:none;}
+  .rail-dot{position:absolute; left:0; top:5px; width:9px; height:9px; border-radius:50%;}
+  .upload-zone{border:2px dashed var(--line); border-radius:16px; background:#FBFAF6; transition:all .15s;}
+  .upload-zone.drag{border-color:var(--teal); background:var(--teal-soft);}
+  input[type=text], textarea{background:#fff; border:1px solid var(--line); border-radius:10px; padding:8px 12px; outline:none;}
+  input[type=text]:focus, textarea:focus{border-color:var(--teal);}
+
+  /* ---- Modal Phóng To Ảnh ---- */
+  .modal-overlay { position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.85); z-index:9999; display:flex; align-items:center; justify-content:center; padding:1rem; }
+  .modal-img { max-width:100%; max-height:90vh; border-radius:12px; object-fit:contain; box-shadow: 0 4px 20px rgba(0,0,0,0.5); }
+  .modal-close { position:absolute; top:15px; right:25px; font-size:40px; color:#fff; cursor:pointer; background:none; border:none; z-index:10000; line-height: 1; transition: color 0.2s;}
+  .modal-close:hover { color: var(--teal-soft); }
+  .cursor-zoom-in { cursor: zoom-in; }
+
+  /* ---- minimal offline utility layer ---- */
+  .flex{display:flex;} .grid{display:grid;} .inline-block{display:inline-block;} .hidden{display:none;}
+  .flex-col{flex-direction:column;} .flex-wrap{flex-wrap:wrap;}
+  .items-center{align-items:center;} .items-start{align-items:flex-start;}
+  .justify-between{justify-content:space-between;}
+  .gap-1{gap:.25rem;} .gap-2{gap:.5rem;} .gap-3{gap:.75rem;} .gap-5{gap:1.25rem;}
+  .space-y-2>*+*{margin-top:.5rem;} .space-y-3>*+*{margin-top:.75rem;} .space-y-4>*+*{margin-top:1rem;} .space-y-5>*+*{margin-top:1.25rem;}
+  .p-4{padding:1rem;} .p-5{padding:1.25rem;} .p-6{padding:1.5rem;} .p-8{padding:2rem;}
+  .px-4{padding-left:1rem;padding-right:1rem;} .px-5{padding-left:1.25rem;padding-right:1.25rem;}
+  .py-2{padding-top:.5rem;padding-bottom:.5rem;} .py-2\.5{padding-top:.625rem;padding-bottom:.625rem;}
+  .py-3{padding-top:.75rem;padding-bottom:.75rem;} .py-4{padding-top:1rem;padding-bottom:1rem;}
+  .pt-3{padding-top:.75rem;} .pt-4{padding-top:1rem;} .pb-4{padding-bottom:1rem;} .pb-16{padding-bottom:4rem;}
+  .mt-0\.5{margin-top:.125rem;} .mt-1{margin-top:.25rem;} .mt-2{margin-top:.5rem;} .mt-3{margin-top:.75rem;}
+  .mt-4{margin-top:1rem;} .mt-6{margin-top:1.5rem;} .mb-2{margin-bottom:.5rem;} .mb-3{margin-bottom:.75rem;}
+  .mx-auto{margin-left:auto;margin-right:auto;}
+  .max-w-5xl{max-width:64rem;} .max-w-sm{max-width:24rem;} .max-h-72{max-height:18rem;}
+  .min-h-screen{min-height:100vh;} .w-full{width:100%;}
+  .rounded-xl{border-radius:14px;}
+  .sticky{position:sticky;} .top-0{top:0;} .z-30{z-index:30;}
+  .backdrop-blur{backdrop-filter:blur(8px);}
+  .border-b{border-bottom:1px solid var(--line);} .border-t{border-top:1px solid var(--line);}
+  .cursor-pointer{cursor:pointer;}
+  .text-xl{font-size:1.25rem;line-height:1.6rem;} .text-2xl{font-size:1.5rem;line-height:2rem;}
+  .text-4xl{font-size:2.25rem;line-height:2.5rem;} .text-sm{font-size:.875rem;line-height:1.35rem;}
+  .text-xs{font-size:.75rem;line-height:1.1rem;} .text-center{text-align:center;}
+  .font-bold{font-weight:700;} .font-extrabold{font-weight:800;} .font-medium{font-weight:500;} .font-semibold{font-weight:600;}
+  .uppercase{text-transform:uppercase;} .tracking-wide{letter-spacing:.04em;}
+  .underline{text-decoration:underline;} .whitespace-pre-line{white-space:pre-line;}
+  .object-contain{object-fit:contain;} .shadow-sm{box-shadow:0 1px 3px rgba(30,25,10,.08);}
+  .header-bg{background:rgba(246,243,236,.95);}
+  .thumb{width:64px; height:64px; flex-shrink:0; object-fit:cover; background:#EFEBE0;}
+  .opacity-60{opacity:.55;}
+  @media (min-width:768px){ .md\:grid-cols-2{grid-template-columns:repeat(2,minmax(0,1fr));} }
+</style>
+</head>
+<body x-data="app()" x-init="init()" x-cloak class="min-h-screen pb-16">
+
+  <!-- Header -->
+  <header class="sticky top-0 z-30 header-bg backdrop-blur border-b">
+    <div class="max-w-5xl mx-auto px-4 pt-4 pb-4" @click.outside="showApiKeyPanel = false">
+      <div class="flex items-start justify-between gap-3 flex-wrap">
+        <div>
+          <h1 class="text-xl font-extrabold">Đối chiếu Nhà Cung Cấp</h1>
+          <p class="text-sm" style="color:var(--ink-soft)">Bếp ăn — Bệnh viện Đại học Y Hà Nội</p>
+        </div>
+        
+        <!-- Nhóm các button Header -->
+        <div class="flex gap-2 flex-wrap relative">
+          <button @click="connectFolder()" class="badge cursor-pointer" :class="dirHandle ? 'badge-teal' : 'badge-gray'">
+            <span x-show="dirHandle">🔗 Đã kết nối: <span x-text="dirHandle && dirHandle.name"></span></span>
+            <span x-show="!dirHandle">☁ Chọn thư mục lưu trữ (Máy tính / Google Drive)</span>
+          </button>
+          
+          <button @click.stop="showApiKeyPanel = !showApiKeyPanel" class="badge cursor-pointer" :class="currentKey ? 'badge-teal' : 'badge-amber'">
+            <span x-show="currentKey">🔑 Đã có API Key Gemini</span>
+            <span x-show="!currentKey">🔑 Chưa nhập API Key</span>
+          </button>
+
+          <!-- API key settings panel (Giao diện nguyên bản) -->
+          <div x-show="showApiKeyPanel" x-cloak class="card p-4 mt-10 space-y-3 shadow-sm absolute right-0 top-full w-full max-w-sm" style="min-width: 320px;">
+            <div>
+              <p class="font-semibold text-sm">Nhà cung cấp AI đọc ảnh: Google Gemini</p>
+              <p class="text-xs mt-1" style="color:var(--ink-soft)">
+                Lấy key miễn phí tại <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener" class="underline font-semibold" style="color:var(--teal)">Google AI Studio</a>.
+              </p>
+            </div>
+
+            <div class="flex gap-2 flex-wrap items-center">
+              <input :type="showApiKeyValue ? 'text' : 'password'" x-model="currentKey" @change="onApiKeyChange()" placeholder="Nhập API Key (AIza...)" class="text-sm" style="flex:1; min-width:180px">
+              <button @click="showApiKeyValue = !showApiKeyValue" class="btn-secondary px-3 py-2 rounded-xl text-sm" x-text="showApiKeyValue ? 'Ẩn' : 'Hiện'"></button>
+            </div>
+            <label class="flex items-start gap-2 text-xs" style="color:var(--ink-soft)">
+              <input type="checkbox" x-model="rememberApiKey" @change="onApiKeyChange()" class="mt-0.5">
+              <span>Ghi nhớ API key trên trình duyệt này (chỉ lưu cục bộ trên máy này).</span>
+            </label>
+
+            <div class="pt-3 border-t" style="border-color:var(--line)">
+              <div class="flex items-center justify-between gap-2 flex-wrap mb-2">
+                <p class="text-xs font-semibold uppercase tracking-wide" style="color:var(--ink-soft)">Model AI</p>
+                <button @click="fetchModels()" :disabled="modelsLoading" class="btn-secondary px-2.5 py-1 rounded-lg text-xs">
+                  <span x-show="!modelsLoading">🔄 Tải danh sách model</span>
+                  <span x-show="modelsLoading">Đang tải…</span>
+                </button>
+              </div>
+              <select x-model="currentModel" @change="onModelChange()" class="w-full text-sm" style="border:1px solid var(--line); border-radius:8px; padding:6px 8px; max-width: 400px;">
+                <template x-if="availableModels.length===0">
+                  <optgroup label="Mặc định">
+                    <option value="gemini-1.5-flash">gemini-1.5-flash</option>
+                    <option value="gemini-1.5-pro">gemini-1.5-pro</option>
+                    <option value="gemini-2.0-flash">gemini-2.0-flash</option>
+                  </optgroup>
+                </template>
+                <template x-for="m in availableModels" :key="m.id">
+                  <option :value="m.id" x-text="m.label + ' (' + m.id + ')'"></option>
+                </template>
+              </select>
+              <p x-show="modelsFetchError" x-text="modelsFetchError" class="text-xs mt-1" style="color:var(--brick)"></p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <nav class="max-w-5xl mx-auto px-4 flex gap-1 mt-4 -mb-px">
+    <button @click="tab='check'" class="tab-btn" :class="tab==='check' && 'active'">📋 Đối chiếu phiếu</button>
+    <button @click="tab='suppliers'" class="tab-btn" :class="tab==='suppliers' && 'active'">📇 Danh mục NCC</button>
+  </nav>
+
+  <main class="max-w-5xl mx-auto px-4 mt-6">
+
+    <!-- ================= TAB: CHECK ================= -->
+    <section x-show="tab==='check'" x-cloak class="space-y-5">
+
+      <!-- Upload zone (multi-file) -->
+      <div class="upload-zone p-6 text-center"
+           :class="dragOver && 'drag'"
+           @dragover.prevent="dragOver=true" @dragleave.prevent="dragOver=false"
+           @drop="dragOver=false; handleDrop($event)">
+        <div class="text-4xl mb-2">📸</div>
+        <p class="font-semibold">Chụp hoặc tải ảnh phiếu giao hàng / hoá đơn</p>
+        <p class="text-sm mt-1" style="color:var(--ink-soft)">Có thể chọn nhiều ảnh cùng lúc — cần API Key để AI tự đọc ảnh</p>
+        <div class="flex gap-2 justify-center flex-wrap mt-4">
+          <label class="inline-block btn-primary px-5 py-2.5 rounded-xl font-semibold cursor-pointer">
+            📸 Tải ảnh
+            <input type="file" accept="image/*" capture="environment" multiple class="hidden" @change="handleFiles($event)">
+          </label>
+          <button @click="showManualForm = !showManualForm" class="btn-secondary px-5 py-2.5 rounded-xl font-semibold">✍️ Nhập tay</button>
+        </div>
+      </div>
+
+      <!-- Manual entry form (no AI, no cost) -->
+      <div x-show="showManualForm" x-cloak class="card p-5 space-y-3">
+        <div>
+          <p class="font-semibold text-sm">✍️ Nhập tay nhanh — không cần AI/mạng</p>
+          <p class="text-xs mt-1" style="color:var(--ink-soft)">Gõ tên NCC, chọn đúng NCC trong danh mục, rồi liệt kê mặt hàng trên phiếu. App tự so khớp bằng từ khoá (không dùng AI) — độ chính xác thấp hơn AI đọc ảnh nên các mục "Kiểm tra lại" cần xem bằng mắt.</p>
+        </div>
+        <div style="position:relative">
+          <input type="text" x-model="manualForm.supplierQuery" @input="manualForm.supplierId=null" placeholder="Gõ tên nhà cung cấp trên phiếu…" class="w-full text-sm">
+          <div x-show="manualForm.supplierQuery && !manualForm.supplierId" x-cloak class="card mt-1" style="position:absolute; z-index:20; width:100%; max-height:200px; overflow:auto;">
+            <template x-for="s in manualSupplierMatches" :key="s.id">
+              <div class="p-2 text-sm cursor-pointer" @click="selectManualSupplier(s)" x-text="s.name" style="border-bottom:1px solid var(--line)"></div>
+            </template>
+            <p x-show="manualSupplierMatches.length===0" class="p-2 text-sm" style="color:var(--brick)">Không tìm thấy NCC này trong danh mục đã duyệt</p>
+          </div>
+        </div>
+        <p x-show="manualForm.supplierId" class="text-xs" style="color:var(--teal)">✓ Đã chọn NCC hợp lệ trong danh mục</p>
+        <div class="flex gap-2 flex-wrap">
+          <input type="text" x-model="manualForm.docNo" placeholder="Số phiếu (không bắt buộc)" class="text-sm" style="flex:1; min-width:140px">
+          <input type="text" x-model="manualForm.docDate" placeholder="Ngày (vd 07/08/2026)" class="text-sm" style="flex:1; min-width:140px">
+        </div>
+        <div class="space-y-2">
+          <template x-for="(row, idx) in manualForm.items" :key="idx">
+            <div class="flex gap-2 flex-wrap items-center">
+              <input type="text" x-model="row.n" placeholder="Tên mặt hàng" class="text-sm" style="flex:2; min-width:140px">
+              <input type="text" x-model="row.q" placeholder="SL" class="text-sm" style="width:70px">
+              <input type="text" x-model="row.u" placeholder="ĐVT" class="text-sm" style="width:70px">
+              <button @click="removeManualRow(idx)" class="text-sm" style="color:var(--slate)">🗑</button>
+            </div>
+          </template>
+          <button @click="addManualRow()" class="btn-secondary px-3 py-1.5 rounded-xl text-sm">+ Thêm mặt hàng</button>
+        </div>
+        <button @click="submitManualEntry()" class="btn-primary px-5 py-2.5 rounded-xl text-sm font-semibold">Đối chiếu (nhập tay)</button>
+      </div>
+
+      <!-- Queue toolbar -->
+      <div x-show="queue.length>0" class="flex items-center justify-between gap-3 flex-wrap">
+        <p class="text-sm" style="color:var(--ink-soft)">
+          <span x-text="queue.length"></span> ảnh tải lên ·
+          <span x-text="queue.filter(q=>q.result).length"></span> đã đối chiếu ·
+          <span x-text="queue.filter(q=>q.saved).length"></span> đã lưu
+        </p>
+        <div class="flex gap-2 flex-wrap">
+          <button @click="runCheckAll()" :disabled="processingAll || pendingCount===0" class="btn-primary px-4 py-2 rounded-xl text-sm font-semibold">
+            <span x-show="!processingAll">🔍 Đối chiếu tất cả (<span x-text="pendingCount"></span>)</span>
+            <span x-show="processingAll">Đang xử lý <span x-text="processedCount"></span>/<span x-text="queue.length"></span>…</span>
+          </button>
+          
+          <button @click="saveValidInvoices()" :disabled="validToSaveCount===0" class="btn-secondary px-4 py-2 rounded-xl text-sm font-semibold" title="Chỉ lưu ảnh của hóa đơn hợp lệ hoặc đã đánh dấu 'Đã kiểm tra'">💾 Lưu hóa đơn (<span x-text="validToSaveCount"></span>)</button>
+          <button @click="clearQueue()" class="btn-secondary px-4 py-2 rounded-xl text-sm font-semibold">Xoá tất cả</button>
+        </div>
+      </div>
+
+      <!-- Queue items -->
+      <div class="space-y-3">
+        <!-- Dùng mảng đã được sort (sortedQueue) để đẩy hóa đơn Cần kiểm tra/Lỗi lên trên -->
+        <template x-for="item in sortedQueue" :key="item.id">
+          <div class="card p-4" style="position:relative;" :class="item.saved && 'opacity-60'">
+            <!-- Nút bỏ khỏi hàng chờ (Góc trên phải) -->
+            <button @click.stop="removeQueueItem(item.id)" class="text-sm" style="position:absolute; top:16px; right:16px; color:var(--slate); z-index:10; background:none; border:none; padding:4px; cursor:pointer;" title="Bỏ khỏi hàng chờ">🗑</button>
+
+            <div class="flex items-start gap-3 flex-wrap cursor-pointer pr-8" @click="item.expanded = !item.expanded">
+              <!-- Click vào ảnh sẽ mở Modal phóng to -->
+              <img x-show="item.preview" :src="item.preview" class="thumb rounded-xl cursor-zoom-in" @click.stop="openImageModal(item.preview)" title="Bấm để phóng to ảnh">
+              
+              <div x-show="!item.preview" class="thumb rounded-xl" style="display:flex; align-items:center; justify-content:center; font-size:22px;">✍️</div>
+              <div class="flex-1" style="min-width:180px">
+                <p class="font-semibold text-sm pr-4" x-text="item.file ? item.file.name : ((item.result && item.result.sup_name) || 'Nhập tay')"></p>
+                <template x-if="item.result">
+                  <p class="text-sm mt-1">
+                    <span x-text="item.result.sup_name || '(không đọc được tên NCC)'"></span>
+                  </p>
+                </template>
+                <p x-show="item.error" x-text="item.error" class="text-sm mt-1" style="color:var(--brick)"></p>
+              </div>
+              <div class="flex items-center gap-2">
+                <span x-show="item.source==='manual'" class="badge badge-gray">✍️ Nhập tay</span>
+                <span x-show="item.saved" class="badge badge-teal">✓ Đã lưu</span>
+                <span x-show="item.extracting" class="badge badge-gray">Đang đọc…</span>
+                <span x-show="item.result && !item.saved" class="badge" :class="item.result && ('badge-' + overallBadge(item.result.overall).cls)" x-text="item.result && overallBadge(item.result.overall).label"></span>
+                <span x-show="!item.result && !item.extracting && !item.error" class="badge badge-gray">Chờ xử lý</span>
+              </div>
+            </div>
+
+            <!-- expanded detail -->
+            <div x-show="item.expanded && item.result" x-cloak class="mt-4 pt-4 border-t space-y-4">
+              <!-- Khung kết quả chính kèm checkbox Đã kiểm tra -->
+              <div class="rounded-xl px-4 py-3 flex items-center justify-between gap-3 flex-wrap" :class="item.result && 'banner-' + overallBadge(item.result.overall).cls">
+                <div class="flex items-center gap-3">
+                  <span class="text-2xl" x-text="item.result && overallBadge(item.result.overall).icon"></span>
+                  <div>
+                    <p class="font-bold" x-text="item.result && overallBadge(item.result.overall).label"></p>
+                    <p class="text-sm mt-0.5" style="color:var(--ink-soft)" x-text="item.result && item.result.note"></p>
+                  </div>
+                </div>
+                
+                <!-- Checkbox xác nhận thủ công (Đưa lên cạnh banner trạng thái) -->
+                <label x-show="item.result && item.result.overall !== 'pass'" class="flex items-center gap-2 text-sm font-semibold cursor-pointer bg-white px-3 py-1.5 rounded-lg shadow-sm border" style="border-color: var(--line);">
+                  <input type="checkbox" x-model="item.manualConfirmed" class="w-4 h-4 cursor-pointer">
+                  <span style="color:var(--ink)">Đã kiểm tra</span>
+                </label>
+              </div>
+
+              <div class="grid md:grid-cols-2 gap-5">
+                <div>
+                  <p class="text-xs font-semibold uppercase tracking-wide mb-2" style="color:var(--ink-soft)">Trên phiếu</p>
+                  <p class="font-semibold" x-text="item.result && item.result.sup_name"></p>
+                  <p class="text-sm mt-1 font-num" style="color:var(--ink-soft)">
+                    Số phiếu: <span x-text="(item.result && item.result.doc_no) || '—'"></span> · Ngày: <span x-text="(item.result && item.result.doc_date) || '—'"></span>
+                  </p>
+                </div>
+                <div>
+                  <p class="text-xs font-semibold uppercase tracking-wide mb-2" style="color:var(--ink-soft)">Trong danh mục đã duyệt</p>
+                  <template x-if="matchedSupplierFor(item)">
+                    <div>
+                      <p class="font-semibold" x-text="matchedSupplierFor(item).name"></p>
+                      <p class="text-sm mt-1" style="color:var(--ink-soft)" x-text="matchedSupplierFor(item).items"></p>
+                      <span class="badge mt-2" :class="'badge-' + contractStatus(matchedSupplierFor(item)).cls" x-text="contractStatus(matchedSupplierFor(item)).label"></span>
+                    </div>
+                  </template>
+                  <template x-if="!matchedSupplierFor(item)">
+                    <p class="text-sm" style="color:var(--brick)">Không tìm thấy nhà cung cấp phù hợp trong danh mục đã duyệt.</p>
+                  </template>
+                  <p class="text-xs mt-2" style="color:var(--slate)">Độ tin cậy khớp tên: <span x-text="item.result && item.result.sup_conf"></span></p>
+                </div>
+              </div>
+
+              <div>
+                <p class="text-xs font-semibold uppercase tracking-wide mb-3" style="color:var(--ink-soft)">Đối chiếu từng mặt hàng</p>
+                <div class="space-y-3">
+                  <template x-for="(it, idx) in ((item.result && item.result.items) || [])" :key="idx">
+                    <div class="rail-item">
+                      <span class="rail-dot" :class="'dot-' + fitBadge(it.fit).cls"></span>
+                      <div class="flex items-start justify-between gap-3 flex-wrap">
+                        <div>
+                          <span class="font-medium" x-text="it.n"></span>
+                          <span class="text-sm font-num" style="color:var(--ink-soft)" x-text="' · ' + (it.q||'') + ' ' + (it.u||'')"></span>
+                        </div>
+                        <span class="badge" :class="'badge-' + fitBadge(it.fit).cls" x-text="fitBadge(it.fit).label"></span>
+                      </div>
+                      <p x-show="it.note" x-text="it.note" class="text-sm mt-0.5" style="color:var(--ink-soft)"></p>
+                    </div>
+                  </template>
+                </div>
+              </div>
+
+              <div class="space-y-3">
+                <textarea x-model="item.saveNote" rows="2" class="w-full text-sm" placeholder="Ghi chú thêm (không bắt buộc)…"></textarea>
+                <div class="flex gap-2">
+                  <button @click="saveItem(item)" :disabled="item.saving || item.saved || (item.result.overall !== 'pass' && !item.manualConfirmed)" class="btn-primary px-5 py-2.5 rounded-xl font-semibold text-sm">
+                    <span x-show="!item.saving && !item.saved">💾 Lưu ảnh hóa đơn này</span>
+                    <span x-show="item.saving">Đang lưu…</span>
+                    <span x-show="item.saved">Đã lưu ✓</span>
+                  </button>
+                  <button x-show="item.source!=='manual'" @click="runCheckItem(item)" :disabled="item.extracting" class="btn-secondary px-5 py-2.5 rounded-xl font-semibold text-sm">↻ Đối chiếu lại</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </template>
+      </div>
+
+      <p x-show="!dirHandle && queue.length>0" class="text-xs px-1" style="color:var(--slate)">
+        Chưa kết nối thư mục lưu trữ. <b>Mẹo:</b> Bạn có thể chọn kết nối trực tiếp với thư mục Google Drive (Ổ G:) trên máy tính để ảnh tự động đồng bộ lên Cloud. <button @click="connectFolder()" class="underline font-semibold" style="color:var(--teal)">Kết nối ngay</button>
+      </p>
+    </section>
+
+    <!-- ================= TAB: SUPPLIERS ================= -->
+    <section x-show="tab==='suppliers'" x-cloak class="space-y-4">
+      <div class="flex items-center justify-between gap-3 flex-wrap">
+        <input type="text" x-model="supplierSearch" placeholder="Tìm theo tên NCC hoặc mặt hàng…" class="w-full max-w-sm text-sm">
+        <div class="flex items-center gap-2 flex-wrap">
+          <p class="text-sm" style="color:var(--ink-soft)"><span x-text="filteredSuppliers.length"></span> / <span x-text="suppliers.length"></span> nhà cung cấp</p>
+          <label class="btn-secondary px-3 py-1.5 rounded-xl text-sm cursor-pointer">
+            📤 Cập nhật danh mục (Excel)
+            <input type="file" accept=".xlsx,.xls" class="hidden" @change="handleCatalogFile($event)">
+          </label>
+        </div>
+      </div>
+
+      <!-- Catalog import preview -->
+      <div x-show="showCatalogImport" x-cloak class="card p-5 space-y-3">
+        <p class="font-semibold text-sm">Xem trước danh mục nhập từ Excel</p>
+        <div class="flex gap-2 items-center flex-wrap" x-show="catalogWorkbook">
+          <label class="text-sm">Sheet:</label>
+          <select x-model="catalogSheetName" @change="regenerateCatalogPreview()" class="text-sm" style="border:1px solid var(--line); border-radius:8px; padding:4px 8px;">
+            <template x-for="name in (catalogWorkbook ? catalogWorkbook.SheetNames : [])" :key="name">
+              <option :value="name" x-text="name"></option>
+            </template>
+          </select>
+        </div>
+        <p x-show="catalogImportError" x-text="catalogImportError" class="text-sm" style="color:var(--brick)"></p>
+        <p class="text-sm" style="color:var(--ink-soft)">Đọc được <span class="font-semibold" x-text="catalogParsedSuppliers.length"></span> nhà cung cấp. Xem thử vài dòng đầu trước khi xác nhận — nếu dữ liệu lộn xộn, đổi sheet ở trên hoặc huỷ và kiểm tra lại file.</p>
+        <div style="max-height:260px; overflow:auto;" class="text-sm">
+          <table style="width:100%; border-collapse:collapse;">
+            <thead><tr style="text-align:left; border-bottom:1px solid var(--line);"><th class="p-1">#</th><th class="p-1">Tên NCC</th><th class="p-1">Mặt hàng</th><th class="p-1">Hạn HĐ</th></tr></thead>
+            <tbody>
+              <template x-for="s in catalogParsedSuppliers.slice(0,8)" :key="s.id">
+                <tr style="border-bottom:1px solid var(--line);">
+                  <td class="p-1 font-num" x-text="s.id"></td>
+                  <td class="p-1" x-text="s.name"></td>
+                  <td class="p-1" x-text="s.items"></td>
+                  <td class="p-1 font-num" x-text="s.contractEnd || (s.autoRenew ? 'Tự gia hạn' : '—')"></td>
+                </tr>
+              </template>
+            </tbody>
+          </table>
+        </div>
+        <div class="flex gap-2">
+          <button @click="confirmCatalogImport()" class="btn-primary px-5 py-2.5 rounded-xl text-sm font-semibold">✓ Xác nhận, thay danh mục hiện tại</button>
+          <button @click="cancelCatalogImport()" class="btn-secondary px-5 py-2.5 rounded-xl text-sm font-semibold">Huỷ</button>
+        </div>
+      </div>
+
+      <div class="space-y-2">
+        <template x-for="s in filteredSuppliers" :key="s.id">
+          <div class="card p-4">
+            <div class="flex items-start justify-between gap-3 flex-wrap cursor-pointer" @click="expandedSupplier = expandedSupplier===s.id ? null : s.id">
+              <div>
+                <p class="font-semibold"><span class="font-num" style="color:var(--slate)" x-text="'#'+s.id+' · '"></span><span x-text="s.name"></span></p>
+                <p class="text-sm mt-0.5" style="color:var(--ink-soft)" x-text="s.items"></p>
+              </div>
+              <span class="badge" :class="'badge-' + contractStatus(s).cls" x-text="contractStatus(s).label"></span>
+            </div>
+            <div x-show="expandedSupplier===s.id" x-cloak class="mt-3 pt-3 border-t text-sm whitespace-pre-line" style="border-color:var(--line); color:var(--ink-soft)" x-text="s.contact"></div>
+          </div>
+        </template>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Modal Phóng to Ảnh -->
+  <div x-show="showImageModal" x-cloak class="modal-overlay" @click="closeImageModal()">
+    <div style="position:relative; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;">
+      <button @click.stop="closeImageModal()" class="modal-close" title="Đóng">&times;</button>
+      <img :src="currentImagePreview" class="modal-img" @click.stop>
+    </div>
+  </div>
+
+  <script>
+    const SUPPLIERS = [
+ {
+  "id": 1,
+  "name": "Chi nhánh Công ty TNHH MM Mega Market (Việt Nam)",
+  "contact": "Bà: Trần Thị Thanh Huyền\nSố điện thoại: (84-24)337551617\nĐịa chỉ: Đường Phạm Văn Đồng, Phường Cổ Nhuế, Quận Bắc Từ Liêm, TP Hà Nội",
+  "items": "Dầu ăn, Gia vị, Phụ gia, Cốc nhựa, cốc giấy, Hàng đồ khô các loại (Có danh mục hàng hóa kèm theo)",
+  "contractText": "Hợp đồng số: 26.SALE.2025,047\nKý ngày: 01/07/2025\nThời hạn HĐ: 31/07/2027",
+  "contractStart": "2025-07-01",
+  "contractEnd": "2027-07-31",
+  "autoRenew": false,
+  "dataFlag": false,
+  "phone": ""
+ },
+ {
+  "id": 2,
+  "name": "Công ty TNHH TMDV Phú Thịnh Việt Nam",
+  "contact": "Bà: Nguyễn Thị Thoa\nSĐT: \nĐịa chỉ: 12B - Nhà U- TT Ngách 30/328 Nguyễn Trãi, Thanh Xuân Trung, Thanh Xuân, Hà Nội",
+  "items": "Đậu phụ, nước đậu các loại",
+  "contractText": "HĐ số: 05/2025/HĐNT/TĐCP-PT\nKý ngày: 01/02/2025\nThời hạn HĐ: 30/01/2028",
+  "contractStart": "2025-02-01",
+  "contractEnd": "2028-01-30",
+  "autoRenew": false,
+  "dataFlag": false,
+  "phone": ""
+ },
+ {
+  "id": 3,
+  "name": "Hợp tác xã Thủy sản công Nghệ cao Đại Áng",
+  "contact": "Ông: Cao Đình Thanh Hải\nSố điện thoại: 0984533658\nĐịa chỉ: Thôn Đại Áng, Đại Áng, Thanh Trì, TP Hà Nội",
+  "items": "Cá các loại, thủy hải sản các loại",
+  "contractText": "Hợp đồng số: 0111-01/2025/HĐMB\nKý ngày: 01/11/2025\nThời hạn HĐ: 30/11/2026",
+  "contractStart": "2025-11-01",
+  "contractEnd": "2026-11-30",
+  "autoRenew": false,
+  "dataFlag": false,
+  "phone": "0984533658"
+ },
+ {
+  "id": 4,
+  "name": "Hộ kinh doanh Nguyễn Tràng Hùng",
+  "contact": "Ông: Nguyễn Tràng Hùng\nSố điện thoại: 0977669166\nĐịa chỉ: Đội 10, Thôn siêu Quần, Tả Thanh Oai, Thanh Trì, Hà Nội",
+  "items": "Cá các loại, thủy hải sản các loại",
+  "contractText": "Hợp đồng số: 84/2025/HĐNT/TĐCP\nKý ngày: 01/07/2025\nThời hạn HĐ: 30/06/2028",
+  "contractStart": "2025-07-01",
+  "contractEnd": "2028-06-30",
+  "autoRenew": false,
+  "dataFlag": false,
+  "phone": "0977669166"
+ },
+ {
+  "id": 5,
+  "name": "Công ty TNHH Phát Triển Thương Mại Thắng Lợi",
+  "contact": "Ông: \nSố điện thoại: 0983568902\nĐịa chỉ: Xóm Mới, xã Thọ An, huyện Đan Phượng, TP Hà Nội, VN",
+  "items": "Thịt gia súc, gia cầm các loại",
+  "contractText": "HĐ số: 20/2025/HĐNT/TL-TĐCP\nNgày kí: 11/04/2025\nThời hạn HĐ: 11/04/2029",
+  "contractStart": "2025-04-11",
+  "contractEnd": "2029-04-11",
+  "autoRenew": false,
+  "dataFlag": false,
+  "phone": "0983568902"
+ },
+ {
+  "id": 6,
+  "name": "Công ty CP Thương Mại Lan Vinh",
+  "contact": "Bà Nguyễn Thị Lan\nĐT: 02438782880\nĐỗ xá, Yên thường, Gia Lâm, Hà Nội",
+  "items": "Thịt gia cầm( Gà, vịt ngan…), giò, chả các loại",
+  "contractText": "Hợp đồng số: 1003/2025/HĐNT/LV-TĐCP\nKý ngày: 10/03/2025\nThời hạn HĐ: 31/12/2026",
+  "contractStart": "2025-03-10",
+  "contractEnd": "2026-12-31",
+  "autoRenew": false,
+  "dataFlag": false,
+  "phone": "02438782880"
+ },
+ {
+  "id": 7,
+  "name": "Công ty cổ Phần Thực Phẩm Song Đạt",
+  "contact": "Bà: Dương Bạch Mai\nSố điện thoại: 02473 073 688\nĐịa chỉ: chợ thôn 2+3, Vạn Phúc, Thanh Trì, Hà Nội",
+  "items": "Thịt gia súc (heo, bò), giò chả, nem, bánh chưng, bánh giò, bún, phở",
+  "contractText": "Hợp đồng số: 79-2025/SĐ-TĐCP\nKý ngày: 01/01/2026\nThời hạn HĐ: 31/12/2026",
+  "contractStart": "2026-01-01",
+  "contractEnd": "2026-12-31",
+  "autoRenew": false,
+  "dataFlag": false,
+  "phone": ""
+ },
+ {
+  "id": 8,
+  "name": "Công ty TNHH Thực Phẩm Thành Huân",
+  "contact": "Ông: Lê Thành Huân\nSố điện thoại: 0987246161\nĐịa chỉ: Thôn Thanh Vân, Thanh Vân, Mê Linh, Hà Nội",
+  "items": "Thịt gia súc (heo,bò), giò chả, …",
+  "contractText": "HĐ số: 161/2025/HĐNT/DMT-TH\nKý ngày 01/12/2025\nThời hạn HĐ: 01/12/2026",
+  "contractStart": "2025-12-01",
+  "contractEnd": "2026-12-01",
+  "autoRenew": false,
+  "dataFlag": false,
+  "phone": "0987246161"
+ },
+ {
+  "id": 9,
+  "name": "Công ty Cổ phần Chăn Nuôi C.P. Việt Nam",
+  "contact": "Ông: Nguyễn Đình Trí\nSố điện thoại: 02433 721 600\nCông ty Cổ phần Chăn Nuôi C.P. Việt Nam",
+  "items": "Trứng gà, vịt, cút các loại",
+  "contractText": "Hợp đồng số: 23/NM3-2025\nKý ngày: 27/06/2025\nThời hạn HĐ: 31/12/2026",
+  "contractStart": "2025-06-27",
+  "contractEnd": "2026-12-31",
+  "autoRenew": false,
+  "dataFlag": false,
+  "phone": ""
+ },
+ {
+  "id": 10,
+  "name": "Công ty TNHH Thực phẩm Nguyên Phong",
+  "contact": "Bà: Đỗ Thị Thanh Tú\nSố điện thoại: 02435591166\nĐịa chỉ: Số 87 Ngụy Như Kon tum, Nhân Chính, Thanh Xuân, Hà Nội",
+  "items": "Thịt lợn và các sản phẩm từ lợn\nTrứng gà, vịt, cút các loại",
+  "contractText": "HĐ số: 85/2025/HĐNT/NP-TĐCP\nKý: 02/07/2025\nThời hạn HĐ: 01/07/2028",
+  "contractStart": "2025-07-02",
+  "contractEnd": "2028-07-01",
+  "autoRenew": false,
+  "dataFlag": false,
+  "phone": "02435591166"
+ },
+ {
+  "id": 11,
+  "name": "CTCP rau an toàn Hải Anh",
+  "contact": "Ông: Nguyễn Thế Hanh\nĐịa chỉ: Vân Nội, Đông Anh, Hà Nội",
+  "items": "Rau ăn lá, rau củ quả các loại",
+  "contractText": "H Đ số: 14/HĐNT/ TĐCP-HA\nNgày kí: 11/03/2025\nHạn H Đ: 11/03/2028",
+  "contractStart": "2025-03-11",
+  "contractEnd": "2028-03-11",
+  "autoRenew": false,
+  "dataFlag": false,
+  "phone": ""
+ },
+ {
+  "id": 12,
+  "name": "Công ty TNHH Thưc Phẩm Hero",
+  "contact": "Ông Đinh Đức An\nSĐT: 0437172448\nĐịa chỉ: Tổ 2, Thượng Thanh, Long Biên, Hà Nội",
+  "items": "Hạt nêm, Mỳ chính của AJIOMOTO",
+  "contractText": "Hợp đồng số:  01/2026/HĐ/H.E.R.O-TĐCP\nKý ngày: 01/01/2026\nThời hạn HĐ: 31/12/2026, tự động gia hạn các năm",
+  "contractStart": "2026-01-01",
+  "contractEnd": "2026-12-31",
+  "autoRenew": true,
+  "dataFlag": false,
+  "phone": "0437172448"
+ },
+ {
+  "id": 13,
+  "name": "Hợp tác xã Sản Xuất nước mắm Nam Hải",
+  "contact": "Ông Trần Quốc Đạt\nSĐT: 0358635888\nTổ 38, khu 10 Quang Trung, Uống Bí, Quảng Ninh",
+  "items": "Nước mắm, mắm tôm, cốt dừa....",
+  "contractText": "HĐ số: 23/2023/HĐNT/TĐCP-NH\nNgày Kí: 01/11/2023\nHạn HĐ: 01/11/2026",
+  "contractStart": "2023-11-01",
+  "contractEnd": "2026-11-01",
+  "autoRenew": false,
+  "dataFlag": false,
+  "phone": "0358635888"
+ },
+ {
+  "id": 14,
+  "name": "Công ty cổ phần dịch vụ B2B Sen Vàng",
+  "contact": "Ông Ngô Hồng Thái\nSĐT: \nsố 63 Vạn Phúc, phường Vạn Phúc, Hà Đông, Hà Nội",
+  "items": "Lạc, Đỗ, Bánh đa nem...",
+  "contractText": "Hợp đồng số: 055/HĐNT/SV-TĐCP\nKý ngày: 01/05/2023\nThời hạn HĐ: Tự động gia hạn",
+  "contractStart": "2023-05-01",
+  "contractEnd": null,
+  "autoRenew": true,
+  "dataFlag": false,
+  "phone": ""
+ },
+ {
+  "id": 15,
+  "name": "Công ty TNHH Thương Mại và Dịch vụ S.H.I Việt Nam",
+  "contact": "Ông Phí Đình Nghi\nSĐT: 0708 988 333\nĐịa chỉ: Số 17, ngõ 328 đường Tây Mỗ, Đại Mỗ, Nam Từ Liêm, Hà Nội",
+  "items": "Bánh bao các loại",
+  "contractText": "HĐ số: /HĐNT/TĐCP-SHI\nNgày Kí: 01/04/2025\nHạn HĐ: 30/03/2028",
+  "contractStart": "2025-04-01",
+  "contractEnd": "2028-03-30",
+  "autoRenew": false,
+  "dataFlag": false,
+  "phone": "0708988333"
+ },
+ {
+  "id": 16,
+  "name": "CT TNHH DẦU ĂN NGUYÊN PHÁT",
+  "contact": "Ông Trần Văn Minh\nSĐT: 024 3862 1342\nĐịa chỉ: Số 19, Ngõ 583, Kim Ngưu, Vĩnh Tuy, Hai Bà Trưng, Hà Nội",
+  "items": "Dầu ăn, Gia vị, Phụ gia,  Hàng đồ khô các loại",
+  "contractText": "HĐ số 0175/NP/2025\nNgày kí: 04/06/2025\nThời hạn HĐ: 01/09/2027",
+  "contractStart": "2025-06-04",
+  "contractEnd": "2027-09-01",
+  "autoRenew": false,
+  "dataFlag": false,
+  "phone": ""
+ },
+ {
+  "id": 17,
+  "name": "Chi nhánh Công ty TNHH MTV Đầu tư và phát triển nông Nghiệp Hà Nội - Xí Nghiệp Bắc Hà",
+  "contact": "Ông Nguyễn Thế Hưng\nSĐT:  0243 968 5468\nĐịa chỉ: Thôn Nhì, xã Vân Nội, Đông anh, TP Hà Nội",
+  "items": "Thực phẩm đông lạnh ( thịt gia súc, gia cầm, hải sản…)",
+  "contractText": "HĐ số: 19.5/2025/XNBH-TĐCP\nNgày kí: 19/05/2025\nThời hạn HĐ: 31/12/2026",
+  "contractStart": "2025-05-19",
+  "contractEnd": "2026-12-31",
+  "autoRenew": false,
+  "dataFlag": false,
+  "phone": "02439685468"
+ },
+ {
+  "id": 18,
+  "name": "Công ty TNHH Thương Mại Xuất Nhập Khẩu Hoàng Châu",
+  "contact": "Ông \nSĐT:  0974 738859\nĐịa chỉ: LK 17, No 16 phố khu dịch vụ Đồng Dưa, Hà Cầu, Hà Đông, Hà Nội",
+  "items": "Trái cây các loại",
+  "contractText": "HĐ số: 37/2024/HĐNT/TĐCP-HC\nNgày kí: 01/05/2024\nThời hạn HĐ: 30/04/2027",
+  "contractStart": "2024-05-01",
+  "contractEnd": "2027-04-30",
+  "autoRenew": false,
+  "dataFlag": false,
+  "phone": "0974738859"
+ },
+ {
+  "id": 19,
+  "name": "Công ty Cổ phần dịch vụ Thương Mại Thắng Hoa",
+  "contact": "Ông Nguyễn Văn Hạnh\nSĐT: \nĐịa chỉ: Xóm 17, xã Xuân Hồng, Xuân Trường, Nam Định",
+  "items": "Gia vị, đồ khô (Đâu xanh, đỏ, nấm hương, măng, miến….)các loại, \nGạo các loại",
+  "contractText": "HĐ số: 68/2024/HĐNT/TĐCP-TH\nNgày kí: 08/10/2024\nThời hạn HĐ: 08/10/2027",
+  "contractStart": "2024-10-08",
+  "contractEnd": "2027-10-08",
+  "autoRenew": false,
+  "dataFlag": false,
+  "phone": ""
+ },
+ {
+  "id": 20,
+  "name": "Công ty TNHH Nhật Lâm VN",
+  "contact": "Ông Đỗ Văn Nam\nSĐT: \nĐịa chỉ: Thôn Trang Trai, Thị Trấn Yên Mỹ, huyện Yên Mỹ, Tỉnh Hưng Yên",
+  "items": "Gạo các loại",
+  "contractText": "HĐ số: 18/2023/HĐNT/TĐCP-NL\nNgày kí: 01/09/2023\nThời hạn HĐ: 01/09/2026",
+  "contractStart": "2023-09-01",
+  "contractEnd": "2026-09-01",
+  "autoRenew": false,
+  "dataFlag": false,
+  "phone": ""
+ },
+ {
+  "id": 21,
+  "name": "Công ty TNHH Hương Giang Việt Nam",
+  "contact": "Ông Nguyễn Tiến Hiệu\nSĐT: 0977768198\nĐịa chỉ: Thôn Đô Quan, xã Mộc Hoàn, thị xã Duy Tiên, tỉnh Hà Nam",
+  "items": "Trái cây các loại",
+  "contractText": "HĐ số: 45/HĐNT/HG-TĐ\nNgày kí:04/06/2025\nThời hạn HĐ: 04/06/2028",
+  "contractStart": "2025-06-04",
+  "contractEnd": "2028-06-04",
+  "autoRenew": false,
+  "dataFlag": false,
+  "phone": "0977768198"
+ },
+ {
+  "id": 22,
+  "name": "Công ty TNHH Thương mại và xây dựng Quốc Khánh",
+  "contact": "Ông Lê Văn Thủy\nSĐT: 0985614856\nĐịa chỉ: Thôn Thanh Vân, Thanh Lâm, Mê Linh, Hà Nội",
+  "items": "Thị gia súc, gia cầm các loại",
+  "contractText": "HĐ số: 19/2023/HĐNT/TĐCP-QK\nNgày kí: 01/09/2023\nThời hạn HĐ: 01/09/2026",
+  "contractStart": "2023-09-01",
+  "contractEnd": "2026-09-01",
+  "autoRenew": false,
+  "dataFlag": false,
+  "phone": "0985614856"
+ },
+ {
+  "id": 23,
+  "name": "Hợp Tác Xã Nông Sản An toàn Ngọc Tuyến",
+  "contact": "Bà: Lương Thị Ngọc \nSĐT: 0369793639\nĐịa chỉ: Ngõ 5, thôn 4, xã Vân Phúc, huyện Phúc Thọ, thành phố Hà Nội",
+  "items": "Trái cây các loại",
+  "contractText": "HĐ số: /2023/HĐNT/TĐCP-NT\nNgày kí: 01/11/2023\nThời hạn HĐ: 30/10/2024,  tự động gia hạn đến 30/10/2026",
+  "contractStart": "2023-11-01",
+  "contractEnd": "2024-10-30",
+  "autoRenew": true,
+  "dataFlag": false,
+  "phone": "0369793639"
+ },
+ {
+  "id": 24,
+  "name": "Công ty cổ phần SX TM và Xây Dựng Tâm Thành",
+  "contact": "Ông: Nguyễn Văn Hùng \nSĐT: 0888368896\nĐịa chỉ: Thôn Cao Hạ, Xã Hoài Đức, TP Hà Nội",
+  "items": "Bún, Phở",
+  "contractText": "HĐ số: 010825/HĐMB/TT-TĐ\nNgày kí: 01/08/2025\nThời hạn HĐ: 31/07/2028",
+  "contractStart": "2025-08-01",
+  "contractEnd": "2028-07-31",
+  "autoRenew": false,
+  "dataFlag": false,
+  "phone": "0888368896"
+ },
+ {
+  "id": 25,
+  "name": "Công ty TNHH Sản xuất và Thương mại Thuần Việt",
+  "contact": "Bà Nguyễn Thùy Dung\nSĐT: 0567 681234\nĐịa chỉ: Thôn Mạch Lũng, Thiên Lộc, Hà Nội",
+  "items": "Trứng gà, vịt, cút các loại",
+  "contractText": "HĐ số: 1408/HĐMB/AV-TĐCP\nNgày kí: 14/08/2025\nThời hạn HĐ: 31/12/2028",
+  "contractStart": "2025-08-14",
+  "contractEnd": "2028-12-31",
+  "autoRenew": false,
+  "dataFlag": false,
+  "phone": "0567681234"
+ },
+ {
+  "id": 26,
+  "name": "CÔNG TY TNHH NEW GREEN WAY VIỆT NAM",
+  "contact": "Ông Trần Hoàng Hiệp\nSĐT: 0982697988\nĐịa chỉ: số 399, đường Nguyễn Xiển, phường Hoàng Liệt, TP Hà Nội",
+  "items": "Rau ăn lá, rau củ quả các loại",
+  "contractText": "HĐ số: 0109/2025/HĐNT/TĐCP-HT\nNgày kí: 01/09/2025\nThời hạn HĐ: 30/08/2028",
+  "contractStart": "2025-09-01",
+  "contractEnd": "2028-08-30",
+  "autoRenew": false,
+  "dataFlag": false,
+  "phone": "0982697988"
+ },
+ {
+  "id": 27,
+  "name": "HTX SẢN XUẤT VÀ TIÊU THỤ RAU AN TOÀN BẮC HỒNG",
+  "contact": "Ông Nguyễn Văn Hải\nSĐT: 0868240361\nĐịa chỉ: Thôn Quan Âm, xã Phúc Thịnh, TP Hà Nội, VN",
+  "items": "Rau ăn lá, rau củ quả các loại",
+  "contractText": "HĐ số: 116/2025/HĐNT/BH-TĐCP\nNgày kí: 25/10/2025\nThời hạn HĐ: 29/10/2026",
+  "contractStart": "2025-10-25",
+  "contractEnd": "2026-10-29",
+  "autoRenew": false,
+  "dataFlag": false,
+  "phone": "0868240361"
+ },
+ {
+  "id": 28,
+  "name": "HỘ KINH DOANH LÊ MẠNH TƯỞNG",
+  "contact": "Ông Lê Mạnh Tưởng\nSĐT: 0986921744\nĐịa chỉ: Số 17, tổ 57 Tương Mai, phường Hoàng Mai, Tp Hà Nội",
+  "items": "Giò, chả, mọc viên các loại",
+  "contractText": "HĐ số: 259/TĐ/HĐNT\nNgày kí: 25/09/2025\nThời hạn HĐ: 25/09/2028",
+  "contractStart": "2025-09-25",
+  "contractEnd": "2028-09-25",
+  "autoRenew": false,
+  "dataFlag": false,
+  "phone": "0986921744"
+ },
+ {
+  "id": 29,
+  "name": "HỘ KINH DOANH ĐOÀN KIM PHỨC",
+  "contact": "Ông Đoàn Kim Phức\nSĐT: 0966716862\nĐịa chỉ: Thôn Tự Khoát, Xã Thanh Trì, TP Hà Nội",
+  "items": "Bánh chưng",
+  "contractText": "HĐ số: 162/2025/HĐNT\nNgày kí: 18/12/2025\nThời hạn HĐ: 18/12/2028",
+  "contractStart": "2025-12-18",
+  "contractEnd": "2028-12-18",
+  "autoRenew": false,
+  "dataFlag": false,
+  "phone": "0966716862"
+ },
+ {
+  "id": 30,
+  "name": "CÔNG TY TNHH NEW GREEN FOOD VIỆT NAM",
+  "contact": "Ông Vũ Thị Thắm\nSĐT: 0866405069\nĐịa chỉ: B-TT07-16, khu nhà ở Ngân Hà, phường Hà Đông, TP Hà Nội, VN",
+  "items": "Trái cây các loại",
+  "contractText": "HĐ số: 12/2026/HĐNT/TĐCP-NG\nNgày kí: 28/01/2026\nThời hạn HĐ: 28/01/2029",
+  "contractStart": "2026-01-28",
+  "contractEnd": "2029-01-28",
+  "autoRenew": false,
+  "dataFlag": false,
+  "phone": "0866405069"
+ },
+ {
+  "id": 31,
+  "name": "CÔNG TY TNHH SẢN XUẤT TRUNG THÀNH",
+  "contact": "Ông Nguyễn Duy Thành \nSĐT: 0904461002\nĐịa chỉ: Đội 1, Thôn Thanh Khúc, Xã Duyên Hà, huyện Thanh Trì, TP Hà Nội",
+  "items": "Bánh chưng, bánh giò, các loại bánh",
+  "contractText": "HĐ số: 04/HĐNT/TT-TĐCP\nNgày kí: 10/01/2026\nThời hạn HĐ: 02 năm kể từ ngày ký",
+  "contractStart": "2026-01-10",
+  "contractEnd": "2028-01-10",
+  "autoRenew": false,
+  "dataFlag": false,
+  "phone": "0904461002"
+ },
+ {
+  "id": 32,
+  "name": "CÔNG TY TNHH THỰC PHẨM LỢI PHÁT",
+  "contact": "Ông Trần Văn Lợi\nSĐT: 0988842692\nĐịa chỉ: Số 8, đường Trung Tâm, xã Liên Minh, TP Hà Nội, VN",
+  "items": "Thịt gia súc các loại ( thịt bò, Thịt bê, thịt trâu…)",
+  "contractText": "HĐ số: 115/2025/HĐNT/TĐCP-LP\nNgày kí: 22/10/2025\nThời hạn HĐ: 22/10/2028",
+  "contractStart": "2025-10-22",
+  "contractEnd": "2028-10-22",
+  "autoRenew": false,
+  "dataFlag": false,
+  "phone": "0988842692"
+ },
+ {
+  "id": 33,
+  "name": "CÔNG TY TNHH CHẾ BIẾN THỰC PHẨM HÀ ANH",
+  "contact": "Ông Nguyễn Ngọc Trường \nSĐT: 0985655440\nĐịa chỉ: Tổ 3, Phường Trưng Nhị, Tp Phúc Yên, Tỉnh Vĩnh Phúc",
+  "items": "Sản phẩm thịt bò các loại",
+  "contractText": "HĐ số: 45/2023/HĐNT/TĐCP-HA\nNgày kí: 01/12/2023\nThời hạn HĐ: 30/11/2026",
+  "contractStart": "2023-12-01",
+  "contractEnd": "2026-11-30",
+  "autoRenew": false,
+  "dataFlag": false,
+  "phone": "0985655440"
+ },
+ {
+  "id": 34,
+  "name": "CHI NHÁNH CÔNG TY CP SIBA FOOD VIỆT NAM TẠI HÀ NỘI",
+  "contact": "Ông Bùi Hưng Thịnh \nSĐT: \nĐịa chỉ: Tầng 12A, tòa nhà Diamond Flower, Khu đô thị mới N1, Số 48, đường Lê Văn Lương, Phường Yên Hòa, TP Hà Nội, VN",
+  "items": "Các sản phẩm từ Thịt gia súc",
+  "contractText": "HĐ số: 0805/2026/SBF-TĐCP\nNgày kí: 08/05/2026\nThời hạn HĐ: 08/05/2027",
+  "contractStart": "2026-05-08",
+  "contractEnd": "2027-05-08",
+  "autoRenew": false,
+  "dataFlag": false,
+  "phone": ""
+ },
+ {
+  "id": 35,
+  "name": "CÔNG TY CỔ PHẦN DỊCH VỤ VÀ THƯƠNG MẠI TUẤN NGA",
+  "contact": "Ông Phạm Tuấn Anh  \nSĐT: 02436470937\nĐịa chỉ: SN 44, Ngõ 148, đường Ngọc Hồi, P. Hoàng Liệt, TP HN",
+  "items": "Sữa vinamilk các loại",
+  "contractText": "HĐ số: 0107/2025/HĐMB\nNgày kí: 01/07/2025\nThời hạn HĐ: 01/07/2028",
+  "contractStart": "2025-07-01",
+  "contractEnd": "2028-07-01",
+  "autoRenew": false,
+  "dataFlag": false,
+  "phone": "02436470937"
+ },
+ {
+  "id": 36,
+  "name": "CÔNG TY TNHH ĐẦU TƯ THƯƠNG MẠI TOÀN ĐỨC",
+  "contact": "Ông Đỗ Văn Lương  \nSĐT: 02435410221\nĐịa chỉ: Số 5, Ngõ 2, phố Đại Linh, phường Trung Văn, Nam Từ Liêm, Tp Hà Nội",
+  "items": "Các sản phẩm của masan",
+  "contractText": "HĐ số: /2023/TĐ-CP\nNgày kí: 01/06/2023\nThời hạn HĐ: 31/12/2025, Tự động gia hạn các năm tiếp theo",
+  "contractStart": "2023-06-01",
+  "contractEnd": "2025-12-31",
+  "autoRenew": true,
+  "dataFlag": false,
+  "phone": "02435410221"
+ },
+ {
+  "id": 37,
+  "name": "CÔNG TY TNHH VISOY TOFU VIỆT NAM",
+  "contact": "Ông Trần Văn Quân  \nSĐT: 0943.094.386\nĐịa chỉ: Thôn Tổ, Xã Ô Diên, Thành Phố Hà Nội, Việt Nam",
+  "items": "Các sản phẩm đậu phụ, sữa đậu",
+  "contractText": "HĐ số: 30/2026/TĐ-CP\nNgày kí: 04/05/2026\nThời hạn HĐ: 04/05/2026",
+  "contractStart": "2026-05-04",
+  "contractEnd": "2026-05-04",
+  "autoRenew": false,
+  "dataFlag": true,
+  "phone": "0943094386"
+ },
+ {
+  "id": 38,
+  "name": "HTX NÔNG NGHIỆP HỮU CƠ BÌNH MINH",
+  "contact": "Ông Nguyễn Ngọc Hải \nSĐT: 0983.325.888\nĐịa chỉ: Thôn Nam Đồng, Xã Hiệp Hòa. Tỉnh Bắc Ninh, Việt Nam",
+  "items": "Các loại thịt, giò chả, nam",
+  "contractText": "HĐ số: 38/2026/HĐNT/HTXBM-TĐCP\nNgày kí: 01/06/2026\nThời hạn HĐ: 31/05/2028",
+  "contractStart": "2026-06-01",
+  "contractEnd": "2028-05-31",
+  "autoRenew": false,
+  "dataFlag": false,
+  "phone": "0983325888"
+ },
+ {
+  "id": 39,
+  "name": "HỘ KINH DOANH NGUYỄN VĂN HÒA",
+  "contact": "Ông Nguyễn Văn Hòa \nSĐT: 0977.173.883\nĐịa chỉ: Số 41, Thôn Xuân Đoài, Xã Phúc Lộc, Hà Nội",
+  "items": "Rau củ quả, các loại đậu, hoa quả",
+  "contractText": "HĐ số: 28/2026 HĐNT\nNgày kí: 20/04/2026\nThời hạn HĐ: 19/04/2029",
+  "contractStart": "2026-04-20",
+  "contractEnd": "2029-04-19",
+  "autoRenew": false,
+  "dataFlag": false,
+  "phone": "0977173883"
+ },
+ {
+  "id": 40,
+  "name": "NHÀ MÁY THỰC PHẨM SON CHICKEN - chi nhánh công ty cổ phần Son Chicken",
+  "contact": "Bà Lê Thị Lành\nSĐT: 0964.638.821\nThôn Đài Sơn, Phường Việt Yên, Tỉnh Bắc Ninh, Việt Nam",
+  "items": "Các loại gia cầm, chim, ngan, gà, vịt",
+  "contractText": "HĐ số: 44/2026/HĐNT/TĐCP-CHICKEN\nNgày kí: 15/6/2026\nThời hạn HĐ: 31/12/2027",
+  "contractStart": "2026-06-15",
+  "contractEnd": "2027-12-31",
+  "autoRenew": false,
+  "dataFlag": false,
+  "phone": "0964638821"
+ },
+ {
+  "id": 41,
+  "name": "CÔNG TY TNHH THỰC PHẨM GIA HẢI",
+  "contact": "Bà : Phạm Thị Vịnh\nSĐT: 0961.299.993\nSố 7, ngách 9, Ngõ 268 Thúy Lĩnh, Phường Lĩnh Nam, Thành Phố Hà Nội",
+  "items": "Các loại thịt, Thủy hải sản và Rau củ quả",
+  "contractText": "HĐ số: 45/2026/HĐNT\nNgày kí: 26/6/2026\nThời hạn HĐ 3 năm kể từ ngày ký",
+  "contractStart": "2026-06-26",
+  "contractEnd": "2029-06-26",
+  "autoRenew": false,
+  "dataFlag": false,
+  "phone": "0961299993"
+ },
+ {
+  "id": 42,
+  "name": "CÔNG TY TNHH SẢN XUẤT THƯƠNG MẠI BÁNH BAO GIA PHÚ",
+  "contact": "Ông: Nguyễn Văn Phú\nSĐT: 0942.957.676\n18B, Dãy H, Ngõ 1 Cầu Bươu, Xã Tả Thanh Oai, Huyện Thanh Trì, Thành phố Hà Nội",
+  "items": "Các loại bánh bao",
+  "contractText": "HĐ số: 35/2026/HĐNT/ TĐCP - GP\nNgày kí: 1/12/2023\nThời hạn HĐ 3 năm kể từ ngày ký",
+  "contractStart": "2023-12-01",
+  "contractEnd": "2026-12-01",
+  "autoRenew": false,
+  "dataFlag": false,
+  "phone": "0942957676"
+ }
+];
+    function app(){
+      return {
+        tab: 'check',
+        suppliers: (typeof SUPPLIERS !== 'undefined') ? SUPPLIERS : [],
+
+        // ---- upload queue ----
+        queue: [],
+        dragOver: false,
+        processingAll: false,
+
+        // ---- manual entry (no AI, no cost) ----
+        showManualForm: false,
+        manualForm: { supplierId: null, supplierQuery: '', docNo: '', docDate: '', items: [{n:'', q:'', u:''}] },
+
+        // ---- folder / cloud sync ----
+        dirHandle: null,
+        folderSupported: (typeof window !== 'undefined' && !!window.showDirectoryPicker),
+
+        // ---- directory tab ----
+        supplierSearch: '',
+        expandedSupplier: null,
+
+        // ---- Image Modal State ----
+        showImageModal: false,
+        currentImagePreview: '',
+
+        async init(){
+          this.loadApiKeyFromStorage();
+          this.loadSupplierOverride();
+        },
+
+        // ===== Image Modal Functions =====
+        openImageModal(url) {
+          if(!url) return;
+          this.currentImagePreview = url;
+          this.showImageModal = true;
+        },
+        closeImageModal() {
+          this.showImageModal = false;
+          this.currentImagePreview = '';
+        },
+
+        // ===== supplier catalog import/update (Excel) =====
+        usingCustomCatalog: false,
+        showCatalogImport: false,
+        catalogWorkbook: null,
+        catalogSheetName: '',
+        catalogParsedSuppliers: [],
+        catalogImportError: '',
+        loadSupplierOverride(){
+          try {
+            const raw = localStorage.getItem('ndhy_suppliers_override');
+            if(raw){ this.suppliers = JSON.parse(raw); this.usingCustomCatalog = true; }
+          } catch(e){ /* ignore */ }
+        },
+        parseContractDates(termText){
+          const raw = termText || '';
+          const dateRe = /(\d{1,2})\/(\d{1,2})\/(\d{4})/g;
+          const dates = [];
+          let m;
+          while((m = dateRe.exec(raw))){
+            const d = new Date(parseInt(m[3],10), parseInt(m[2],10) - 1, parseInt(m[1],10));
+            if(!isNaN(d.getTime())) dates.push(d);
+          }
+          let start = dates[0] || null;
+          let end = dates[1] || null;
+          const norm = this.normalizeVN(raw);
+          const autoRenew = norm.includes('tu dong gia han') || norm.includes('tu gia han');
+          if(!end){
+            const ym = /(\d+)\s*nam\s*ke tu ngay k/.exec(norm);
+            if(ym && start){
+              const yrs = parseInt(ym[1], 10);
+              end = new Date(start.getFullYear() + yrs, start.getMonth(), start.getDate());
+            }
+          }
+          const toIso = d => d ? new Date(d.getTime() - d.getTimezoneOffset()*60000).toISOString().slice(0,10) : null;
+          const dataFlag = !!(start && end && Math.abs(end - start) / 86400000 < 30);
+          return {contractStart: toIso(start), contractEnd: toIso(end), autoRenew, dataFlag};
+        },
+        extractPhone(contact){
+          const m = /(0\d{2,3}[\s.]?\d{3}[\s.]?\d{3,4}|0\d{9,10})/.exec((contact || '').replace(/\n/g, ' '));
+          return m ? m[0].replace(/[\s.]/g, '') : '';
+        },
+        parseSupplierSheet(wb, sheetName){
+          const rows = XLSX.utils.sheet_to_json(wb.Sheets[sheetName], {header: 1, defval: null});
+          
+          let headerIdx = -1;
+          let nameColIdx = 1, contactColIdx = 2, itemsColIdx = 3, termColIdx = 4;
+
+          for(let r=0; r<Math.min(15, rows.length); r++){
+            const row = rows[r] || [];
+            
+            // Tìm cột chứa Tên NCC (so sánh chính xác hoặc gần chính xác để tránh nhầm với Tiêu đề bảng)
+            let foundName = row.findIndex(c => {
+                if(typeof c !== 'string') return false;
+                const s = c.toLowerCase().trim();
+                return s === 'nhà cung cấp' || s === 'tên nhà cung cấp' || s === 'tên ncc' || s === 'đơn vị cung cấp';
+            });
+
+            if(foundName !== -1){
+              headerIdx = r;
+              nameColIdx = foundName;
+              
+              let foundContact = row.findIndex(c => typeof c === 'string' && /liên hệ|điện thoại|địa chỉ|sđt/i.test(c.toLowerCase()));
+              if(foundContact !== -1) contactColIdx = foundContact;
+              
+              let foundItems = row.findIndex(c => typeof c === 'string' && /mặt hàng|sản phẩm|hàng hóa/i.test(c.toLowerCase()));
+              if(foundItems !== -1) itemsColIdx = foundItems;
+              
+              let foundTerm = row.findIndex(c => typeof c === 'string' && /hợp đồng|thời hạn|hạn hđ/i.test(c.toLowerCase()));
+              if(foundTerm !== -1) termColIdx = foundTerm;
+              break;
+            }
+          }
+
+          if(headerIdx === -1) {
+              headerIdx = rows.findIndex(r => r.some(c => typeof c === 'string' && /^\s*(stt|tt)\s*$/i.test(c)));
+              if(headerIdx === -1) headerIdx = 0;
+          }
+
+          const out = [];
+          let autoId = 1;
+          for(let i = headerIdx + 1; i < rows.length; i++){
+            const row = rows[i] || [];
+            const name = row[nameColIdx];
+            if(!name || typeof name !== 'string' || !name.toString().trim() || /danh sách nhà cung cấp/i.test(name.toString().trim())) continue;
+            
+            let sttVal = row[0];
+            let id = (typeof sttVal === 'number') ? sttVal : autoId;
+
+            const contact = (row[contactColIdx] || '').toString().trim();
+            const items = (row[itemsColIdx] || '').toString().trim();
+            const termText = (row[termColIdx] || '').toString().trim();
+            const dates = this.parseContractDates(termText);
+            
+            out.push({
+              id, name: name.toString().trim(), contact, items, contractText: termText,
+              contractStart: dates.contractStart, contractEnd: dates.contractEnd,
+              autoRenew: dates.autoRenew, dataFlag: dates.dataFlag, phone: this.extractPhone(contact)
+            });
+            autoId++;
+          }
+          return out;
+        },
+        async handleCatalogFile(e){
+          const f = e.target.files[0];
+          e.target.value = '';
+          if(!f) return;
+          this.catalogImportError = '';
+          try {
+            const buf = await f.arrayBuffer();
+            const wb = XLSX.read(buf, {type: 'array'});
+            this.catalogWorkbook = wb;
+            let best = wb.SheetNames[0];
+            let bestScore = -1;
+            
+            for(const name of wb.SheetNames){
+              const rows = XLSX.utils.sheet_to_json(wb.Sheets[name], {header: 1, defval: null});
+              let score = 0;
+              // Tránh các sheet trống
+              if (rows.length < 2) continue; 
+              
+              const hasStt = rows.some(r => r.some(c => typeof c === 'string' && /^\s*(stt|tt)\s*$/i.test(c)));
+              const hasNcc = rows.some(r => r.some(c => typeof c === 'string' && /nhà cung cấp|tên ncc/i.test(c.toLowerCase())));
+              
+              if(hasStt) score += 1000;
+              if(hasNcc) score += 1000;
+              score += rows.length; // Ưu tiên sheet có nhiều dòng dữ liệu hơn
+              
+              if(score > bestScore){ bestScore = score; best = name; }
+            }
+            
+            this.catalogSheetName = best;
+            this.regenerateCatalogPreview();
+            this.showCatalogImport = true;
+          } catch(err){
+            this.catalogImportError = 'Không đọc được file Excel: ' + (err.message || '');
+            this.showCatalogImport = true;
+            alert('Lỗi đọc file: ' + err.message);
+          }
+        },
+        regenerateCatalogPreview(){
+          try {
+            this.catalogParsedSuppliers = this.parseSupplierSheet(this.catalogWorkbook, this.catalogSheetName);
+            this.catalogImportError = '';
+          } catch(err){
+            this.catalogImportError = 'Lỗi đọc sheet "' + this.catalogSheetName + '": ' + (err.message || '');
+            this.catalogParsedSuppliers = [];
+          }
+        },
+        confirmCatalogImport(){
+          if(this.catalogParsedSuppliers.length === 0){ 
+              alert('Không có dòng nào hợp lệ để nhập — kiểm tra lại sheet đã chọn.'); 
+              return; 
+          }
+          this.suppliers = [...this.catalogParsedSuppliers];
+          this.usingCustomCatalog = true;
+          try { 
+              localStorage.setItem('ndhy_suppliers_override', JSON.stringify(this.suppliers)); 
+              alert('Cập nhật danh mục thành công!');
+          } catch(e){
+              console.error(e);
+          }
+          this.showCatalogImport = false;
+          this.catalogWorkbook = null;
+        },
+        cancelCatalogImport(){
+          this.showCatalogImport = false;
+          this.catalogWorkbook = null;
+          this.catalogParsedSuppliers = [];
+          this.catalogImportError = '';
+        },
+
+        // ===== API key & Model (Gemini Only) =====
+        currentKey: '',
+        currentModel: 'gemini-1.5-flash',
+        availableModels: [],
+        modelsLoading: false,
+        modelsFetchError: '',
+        rememberApiKey: false,
+        showApiKeyPanel: false,
+        showApiKeyValue: false,
+
+        loadApiKeyFromStorage(){
+          try {
+            const g = localStorage.getItem('ndhy_key_gemini');
+            if(g){ 
+              this.currentKey = g; 
+              this.rememberApiKey = true; 
+            }
+            const mg = localStorage.getItem('ndhy_model_gemini');
+            if(mg){ this.currentModel = mg; }
+          } catch(e){ /* localStorage unavailable */ }
+        },
+        onModelChange(){
+          try {
+            localStorage.setItem('ndhy_model_gemini', this.currentModel);
+          } catch(e){}
+        },
+        onApiKeyChange(){
+          try {
+            if(this.rememberApiKey){
+              if(this.currentKey){ localStorage.setItem('ndhy_key_gemini', this.currentKey); } 
+              else { localStorage.removeItem('ndhy_key_gemini'); }
+            } else {
+              localStorage.removeItem('ndhy_key_gemini');
+            }
+          } catch(e){ /* ignore */ }
+        },
+        async fetchModels(){
+          const key = this.currentKey && this.currentKey.trim();
+          if(!key){
+            this.modelsFetchError = 'Nhập API Key trước đã, rồi mới tải được danh sách model.';
+            return;
+          }
+          this.modelsLoading = true;
+          this.modelsFetchError = '';
+          try {
+            const resp = await fetch('https://generativelanguage.googleapis.com/v1beta/models?key=' + key);
+            const data = await resp.json();
+            if(data.error) throw new Error(data.error.message || 'Lỗi tải danh sách model');
+            const list = (data.models || [])
+              .filter(m => (m.supportedGenerationMethods || m.supportedActions || []).includes('generateContent'))
+              .map(m => ({id: (m.name || '').replace(/^models\//, ''), label: m.displayName || (m.name || '').replace(/^models\//, '')}))
+              .sort((a, b) => a.id.localeCompare(b.id));
+            this.availableModels = list;
+            if(list.length && !list.some(m => m.id === this.currentModel)){
+              this.currentModel = list[0].id;
+              this.onModelChange();
+            }
+          } catch(err){
+            this.modelsFetchError = 'Không tải được danh sách model: ' + (err.message || '');
+          } finally {
+            this.modelsLoading = false;
+          }
+        },
+
+        // ===== computed-ish helpers =====
+        get sortedQueue() {
+          return this.queue.slice().sort((a, b) => {
+            const score = (x) => {
+              if (x.saved) return 5; // Đã lưu cho xuống chót
+              if (x.result) {
+                if (x.result.overall === 'fail') return 1; // Không khớp lên top 1
+                if (x.result.overall === 'warn') return 2; // Cần kiểm tra lên top 2
+                return 4; // pass thì xuống top 4
+              }
+              if (x.error) return 1.5; // Lỗi đọc đẩy lên cao
+              return 3; // pending (đang chờ/đang chạy)
+            };
+            return score(a) - score(b);
+          });
+        },
+        get filteredSuppliers(){
+          const q = this.supplierSearch.trim().toLowerCase();
+          if(!q) return this.suppliers;
+          return this.suppliers.filter(s =>
+            s.name.toLowerCase().includes(q) ||
+            (s.items||'').toLowerCase().includes(q)
+          );
+        },
+        get pendingCount(){
+          return this.queue.filter(q => !q.result && !q.extracting && !q.saved && q.resizedBase64).length;
+        },
+        get processedCount(){
+          return this.queue.filter(q => q.result || q.error).length;
+        },
+        get validToSaveCount(){
+          return this.queue.filter(q => q.result && !q.saved && (q.result.overall === 'pass' || q.manualConfirmed)).length;
+        },
+        matchedSupplierFor(item){
+          if(!item.result || item.result.sup_id === null || item.result.sup_id === undefined) return null;
+          const id = Number(item.result.sup_id);
+          return this.suppliers.find(s => s.id === id) || null;
+        },
+
+        // ===== Vietnamese-aware text helpers (for offline manual matching) =====
+        normalizeVN(s){
+          if(!s) return '';
+          return s.toString()
+            .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+            .replace(/[đĐ]/g, 'd')
+            .toLowerCase().trim();
+        },
+        get manualSupplierMatches(){
+          const q = this.normalizeVN(this.manualForm.supplierQuery);
+          if(!q) return [];
+          return this.suppliers.filter(s => this.normalizeVN(s.name).includes(q)).slice(0, 8);
+        },
+        selectManualSupplier(s){
+          this.manualForm.supplierId = s.id;
+          this.manualForm.supplierQuery = s.name;
+        },
+        fitLocal(itemName, matHangText){
+          const stop = new Set(['cac','loai','va','cua','theo','hang','loai','kem']);
+          const words = t => this.normalizeVN(t).split(/[^a-z0-9]+/).filter(w => w.length > 1 && !stop.has(w));
+          const itemWords = words(itemName);
+          const catWords = words(matHangText);
+          return itemWords.some(w => catWords.some(c => c === w || c.includes(w) || w.includes(c)));
+        },
+        addManualRow(){ this.manualForm.items.push({n:'', q:'', u:''}); },
+        removeManualRow(idx){ this.manualForm.items.splice(idx, 1); },
+        submitManualEntry(){
+          const rows = this.manualForm.items.filter(r => r.n && r.n.trim());
+          if(rows.length === 0){ alert('Nhập ít nhất 1 mặt hàng.'); return; }
+          const supplier = this.manualForm.supplierId ? this.suppliers.find(s => s.id === this.manualForm.supplierId) : null;
+          const items = rows.map(r => {
+            let fit = 'warn', note = 'Chưa xác định NCC — không thể đối chiếu mặt hàng';
+            if(supplier){
+              if(this.fitLocal(r.n, supplier.items)){ fit = 'ok'; note = ''; }
+              else { fit = 'warn'; note = 'Không thấy từ khoá trùng khớp trong danh mục đăng ký — kiểm tra lại bằng mắt'; }
+            }
+            return {n: r.n.trim(), q: r.q || '', u: r.u || '', fit, note};
+          });
+          const overall = !supplier ? 'fail' : (items.every(i => i.fit === 'ok') ? 'pass' : 'warn');
+          const result = {
+            sup_name: this.manualForm.supplierQuery || (supplier ? supplier.name : ''),
+            sup_id: supplier ? supplier.id : null,
+            sup_conf: supplier ? 'high' : 'none',
+            doc_no: this.manualForm.docNo || '',
+            doc_date: this.manualForm.docDate || '',
+            items,
+            overall,
+            note: supplier
+              ? 'Đối chiếu bằng nhập tay (so khớp từ khoá, không dùng AI) — các mục "Kiểm tra lại" nên xem lại bằng mắt thường vì thuật toán chỉ so khớp từ khoá đơn giản.'
+              : 'Không tìm thấy nhà cung cấp này trong danh mục đã duyệt.',
+          };
+          this.queue.unshift({
+            id: 'm' + Date.now() + Math.random().toString(36).slice(2,7),
+            file: null, preview: null,
+            resizedBase64: null, resizedMediaType: null,
+            extracting: false, error: '', result,
+            expanded: overall !== 'pass',
+            manualConfirmed: false, saveNote: '', saving: false, saved: false,
+            source: 'manual',
+          });
+          this.manualForm = { supplierId: null, supplierQuery: '', docNo: '', docDate: '', items: [{n:'', q:'', u:''}] };
+          this.showManualForm = false;
+        },
+
+        // ===== contract status =====
+        contractStatus(s){
+          if(!s) return {label:'Không rõ', cls:'gray'};
+          const todayIso = new Date().toISOString().slice(0,10);
+          if(!s.contractEnd){
+            return s.autoRenew
+              ? {label:'Còn hiệu lực (tự gia hạn)', cls:'teal'}
+              : {label:'Chưa rõ hạn hợp đồng — kiểm tra thủ công', cls:'gray'};
+          }
+          const daysLeft = Math.floor((new Date(s.contractEnd) - new Date(todayIso)) / 86400000);
+          let base;
+          if(daysLeft < 0) base = {label:'Hết hạn ' + this.fmtDate(s.contractEnd), cls:'brick'};
+          else if(daysLeft <= 60) base = {label:'Sắp hết hạn (' + this.fmtDate(s.contractEnd) + ')', cls:'amber'};
+          else base = {label:'Còn hiệu lực đến ' + this.fmtDate(s.contractEnd), cls:'teal'};
+          if(s.dataFlag) base.label += ' ⚠ dữ liệu HĐ cần rà soát';
+          return base;
+        },
+        fmtDate(iso){
+          if(!iso) return '';
+          const [y,m,d] = iso.split('-');
+          return d + '/' + m + '/' + y;
+        },
+
+        // ===== file handling (batch) =====
+        handleFiles(e){
+          const files = Array.from(e.target.files || []);
+          files.forEach(f => this.addFileToQueue(f));
+          e.target.value = ''; // allow re-selecting the same file(s) later
+        },
+        handleDrop(e){
+          e.preventDefault();
+          const files = Array.from((e.dataTransfer && e.dataTransfer.files) || []).filter(f => f.type.startsWith('image/'));
+          files.forEach(f => this.addFileToQueue(f));
+        },
+        async addFileToQueue(f){
+          let preview = null;
+          let resizedBase64 = null;
+          let resizedMediaType = 'image/jpeg';
+          let warnMsg = '';
+          try {
+            preview = await this.readAsDataURL(f);
+          } catch(e){
+            console.error('readAsDataURL failed', e);
+          }
+          try {
+            const resized = await this.resizeImage(f, 1600, 0.85);
+            resizedBase64 = resized.base64;
+            resizedMediaType = resized.mediaType;
+          } catch(e){
+            console.error('resizeImage failed', e);
+            const isHeic = /\.(heic|heif)$/i.test(f.name || '') || /heic|heif/i.test(f.type || '');
+            warnMsg = isHeic
+              ? 'Ảnh định dạng HEIC (thường từ iPhone) — trình duyệt không đọc được. Vào Cài đặt > Camera trên điện thoại, đổi "Định dạng" sang "Tương thích nhiều nhất / Most Compatible (JPEG)" rồi chụp/tải lại, hoặc chuyển ảnh sang .jpg trước khi tải lên.'
+              : 'Không xử lý được ảnh này (định dạng lạ hoặc file lỗi). Thử chụp lại hoặc chọn ảnh khác.';
+          }
+          this.queue.unshift({
+            id: 'q' + Date.now() + Math.random().toString(36).slice(2,7),
+            file: f,
+            preview,
+            resizedBase64,
+            resizedMediaType,
+            extracting: false,
+            error: warnMsg,
+            result: null,
+            expanded: false,
+            manualConfirmed: false,
+            saveNote: '',
+            saving: false,
+            saved: false,
+            source: 'ai',
+          });
+        },
+        readAsDataURL(f){
+          return new Promise((resolve, reject) => {
+            const r = new FileReader();
+            r.onload = () => resolve(r.result);
+            r.onerror = reject;
+            r.readAsDataURL(f);
+          });
+        },
+        resizeImage(file, maxDim, quality){
+          return new Promise((resolve, reject) => {
+            const img = new Image();
+            const url = URL.createObjectURL(file);
+            img.onload = () => {
+              let w = img.width, h = img.height;
+              if(w > h && w > maxDim){ h = Math.round(h * maxDim / w); w = maxDim; }
+              else if(h >= w && h > maxDim){ w = Math.round(w * maxDim / h); h = maxDim; }
+              const canvas = document.createElement('canvas');
+              canvas.width = w; canvas.height = h;
+              canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+              const dataUrl = canvas.toDataURL('image/jpeg', quality);
+              URL.revokeObjectURL(url);
+              resolve({base64: dataUrl.split(',')[1], mediaType: 'image/jpeg'});
+            };
+            img.onerror = reject;
+            img.src = url;
+          });
+        },
+        removeQueueItem(id){
+          this.queue = this.queue.filter(q => q.id !== id);
+        },
+        clearQueue(){
+          if(this.queue.some(q => q.extracting)){
+            if(!confirm('Một số ảnh đang được xử lý. Vẫn xoá tất cả?')) return;
+          }
+          this.queue = [];
+        },
+        clearSavedFromQueue(){
+          this.queue = this.queue.filter(q => !q.saved);
+        },
+
+        // ===== AI check (Gemini Only) =====
+        catalogForPrompt(){
+          return this.suppliers.map(s => ({
+            id: s.id, ten: s.name, mat_hang: s.items, dt: s.phone || undefined
+          }));
+        },
+        buildSystemPrompt(){
+          return [
+            'Bạn là trợ lý đối chiếu phiếu giao hàng / hoá đơn thực phẩm cho bếp ăn bệnh viện tại Việt Nam.',
+            'Nhiệm vụ:',
+            '1) Đọc ảnh phiếu giao hàng/hoá đơn, trích: tên nhà cung cấp ghi trên phiếu (sup_name), số phiếu/hoá đơn (doc_no), ngày (doc_date, định dạng dd/mm/yyyy nếu có), danh sách mặt hàng gồm tên, số lượng, đơn vị.',
+            '2) So khớp sup_name với DANH SÁCH NHÀ CUNG CẤP ĐÃ DUYỆT bên dưới (chấp nhận viết tắt, tên chi nhánh, thiếu dấu, số điện thoại trùng khớp). Trả về sup_id là "id" phù hợp nhất, hoặc null nếu không nhà cung cấp nào hợp lý. Đặt sup_conf là "high" nếu chắc chắn, "medium" nếu khá chắc, "low" nếu chỉ đoán, "none" nếu không tìm thấy.',
+            '3) Với TỪNG mặt hàng trên phiếu, đối chiếu với trường mat_hang đã đăng ký của nhà cung cấp đã khớp (sup_id): fit="ok" nếu phù hợp danh mục đăng ký, fit="warn" nếu không chắc chắn/hơi khác nhưng có thể liên quan, fit="no" nếu rõ ràng KHÔNG thuộc danh mục đăng ký của NCC đó. Nếu sup_id là null, mọi item fit="warn" với note "chưa xác định NCC".',
+            '4) overall: "pass" nếu sup_conf là high hoặc medium VÀ mọi item fit="ok"; "warn" nếu có ít nhất 1 item fit="warn" hoặc sup_conf="low"; "fail" nếu sup_id null hoặc có item fit="no".',
+            'CHỈ trả lời bằng JSON hợp lệ đúng schema sau, KHÔNG kèm chữ nào khác, KHÔNG dùng markdown code fence:',
+            '{"sup_name":"","sup_id":null,"sup_conf":"","doc_no":"","doc_date":"","items":[{"n":"","q":"","u":"","fit":"","note":""}],"overall":"","note":""}',
+            '',
+            'DANH SÁCH NHÀ CUNG CẤP ĐÃ DUYỆT (JSON):',
+            JSON.stringify(this.catalogForPrompt())
+          ].join('\n');
+        },
+        async runCheckItem(item){
+          if(!item.resizedBase64){
+            item.error = item.error || 'Ảnh này chưa xử lý được, không thể đối chiếu — xem ghi chú lỗi ở trên.';
+            return;
+          }
+          const key = this.currentKey;
+          if(!key || !key.trim()){
+            item.error = 'Chưa nhập API Key cho Google Gemini — bấm nút "🔑 Chưa nhập API Key" ở đầu trang để nhập.';
+            this.showApiKeyPanel = true;
+            return;
+          }
+          item.extracting = true;
+          item.error = '';
+          try {
+            const parsed = await this.callGemini(item, key.trim());
+            item.result = parsed;
+            item.expanded = parsed.overall !== 'pass';
+          } catch(err){
+            console.error(err);
+            item.error = 'Không đọc được phiếu: ' + (err.message || 'lỗi không rõ') + '. Kiểm tra lại API Key hoặc thử ảnh rõ nét hơn.';
+          } finally {
+            item.extracting = false;
+          }
+        },
+        safeParseJson(text){
+          try { return JSON.parse(text); }
+          catch(parseErr){
+            const start = text.indexOf('{');
+            const end = text.lastIndexOf('}');
+            if(start === -1 || end === -1) throw parseErr;
+            return JSON.parse(text.slice(start, end + 1));
+          }
+        },
+        async callGemini(item, key){
+          const url = `https://generativelanguage.googleapis.com/v1beta/models/${this.currentModel}:generateContent?key=${key}`;
+          const resp = await fetch(url, {
+            method: 'POST',
+            headers: {
+              'content-type': 'application/json'
+            },
+            body: JSON.stringify({
+              systemInstruction: {parts: [{text: this.buildSystemPrompt()}]},
+              contents: [{
+                parts: [
+                  {text: 'Đối chiếu phiếu giao hàng/hoá đơn này với danh mục nhà cung cấp đã cho. Trả lời đúng JSON schema.'},
+                  {inline_data: {mime_type: item.resizedMediaType, data: item.resizedBase64}}
+                ]
+              }],
+              generationConfig: {temperature: 0.2, maxOutputTokens: 2000, responseMimeType: 'application/json'}
+            })
+          });
+          const data = await resp.json();
+          if(data.error) throw new Error(data.error.message || 'Lỗi API Gemini');
+          const cand = data.candidates && data.candidates[0];
+          const text = cand && cand.content && cand.content.parts ? cand.content.parts.map(p => p.text || '').join('') : '';
+          if(!text){
+            const reason = cand && cand.finishReason ? (' (finishReason: ' + cand.finishReason + ')') : '';
+            throw new Error('Không nhận được nội dung từ Gemini' + reason + ' — có thể bộ lọc an toàn của Google đã chặn ảnh này.');
+          }
+          return this.safeParseJson(text);
+        },
+        async runCheckAll(){
+          const pending = this.queue.filter(q => !q.result && !q.extracting && q.resizedBase64);
+          if(pending.length === 0) return;
+          this.processingAll = true;
+          const concurrency = Math.min(3, pending.length);
+          let idx = 0;
+          const workers = new Array(concurrency).fill(0).map(async () => {
+            while(idx < pending.length){
+              const item = pending[idx++];
+              await this.runCheckItem(item);
+            }
+          });
+          await Promise.all(workers);
+          this.processingAll = false;
+        },
+
+        overallBadge(status){
+          if(status === 'pass') return {label:'ĐẠT — Khớp danh mục', cls:'teal', icon:'✓'};
+          if(status === 'warn') return {label:'CẦN KIỂM TRA', cls:'amber', icon:'!'};
+          return {label:'KHÔNG KHỚP', cls:'brick', icon:'×'};
+        },
+        fitBadge(fit){
+          if(fit === 'ok') return {label:'Khớp', cls:'teal'};
+          if(fit === 'warn') return {label:'Kiểm tra lại', cls:'amber'};
+          return {label:'Không có trong DM', cls:'brick'};
+        },
+
+        // ===== folder / cloud sync =====
+        async connectFolder(){
+          if(!this.folderSupported){
+            alert('Trình duyệt này chưa hỗ trợ chọn thư mục trực tiếp. Hãy dùng Chrome hoặc Edge trên máy tính, trỏ vào một thư mục đã đồng bộ Google Drive/OneDrive.');
+            return;
+          }
+          try {
+            this.dirHandle = await window.showDirectoryPicker({mode: 'readwrite'});
+          } catch(e){ /* user cancelled picker */ }
+        },
+        
+        async writeToFolder(item){
+          if(!this.dirHandle) {
+            alert('Vui lòng kết nối thư mục lưu trữ trước khi lưu!');
+            throw new Error('No directory selected');
+          }
+          if(!item.file) return; // Nếu là nhập tay không có file thì bỏ qua
+
+          try {
+            const dateStr = new Date().toISOString().slice(0,10).replace(/-/g, '');
+            const safeName = (item.result?.sup_name || 'NCC_KhongRo').replace(/[\\/:*?"<>|]/g, '').slice(0, 30);
+            const uniqueId = Math.random().toString(36).slice(2,6);
+            const ext = item.file.name.split('.').pop() || 'jpg';
+            
+            // Format tên file: [YYYYMMDD]_[TênNCC]_[ID].jpg
+            const fileName = `${dateStr}_${safeName}_${uniqueId}.${ext}`;
+            
+            const imgHandle = await this.dirHandle.getFileHandle(fileName, {create: true});
+            const iw = await imgHandle.createWritable();
+            await iw.write(item.file);
+            await iw.close();
+          } catch(e){
+            console.error('Lỗi ghi file:', e);
+            throw e;
+          }
+        },
+        
+        async saveItem(item){
+          if(!item.result || item.saved) return;
+          item.saving = true;
+          try {
+            await this.writeToFolder(item);
+            item.saved = true;
+          } catch (e) {
+            // Lỗi đã được alert trong writeToFolder hoặc do chưa chọn thư mục
+          }
+          item.saving = false;
+        },
+        
+        // LƯU HÓA ĐƠN THEO ĐIỀU KIỆN (Chỉ lưu ảnh)
+        async saveValidInvoices(){
+          if(!this.dirHandle) {
+            alert('Vui lòng kết nối thư mục lưu trữ trước khi lưu!');
+            return;
+          }
+          
+          const ready = this.queue.filter(q => q.result && !q.saved && (q.result.overall === 'pass' || q.manualConfirmed));
+          if(ready.length === 0) return;
+
+          this.processingAll = true;
+
+          for(let i = 0; i < ready.length; i++){
+            const item = ready[i];
+            item.saving = true;
+            try {
+              await this.writeToFolder(item);
+              item.saved = true;
+            } catch(e) {
+              console.error(e);
+            }
+            item.saving = false;
+          }
+          
+          this.processingAll = false;
+        }
+      };
+    }
+  </script>
+</body>
+</html>
