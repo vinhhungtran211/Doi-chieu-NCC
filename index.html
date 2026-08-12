@@ -100,14 +100,14 @@
   <!-- Header -->
   <header class="sticky top-0 z-30 header-bg backdrop-blur border-b">
     <div class="max-w-5xl mx-auto px-4 pt-4 pb-4" @click.outside="showApiKeyPanel = false">
-      <div class="flex items-start justify-between gap-3 flex-wrap">
+      <div class="flex items-start justify-between gap-3 flex-wrap relative">
         <div>
           <h1 class="text-xl font-extrabold">Đối chiếu Nhà Cung Cấp</h1>
           <p class="text-sm" style="color:var(--ink-soft)">Bếp ăn — Bệnh viện Đại học Y Hà Nội</p>
         </div>
         
         <!-- Nhóm các button Header -->
-        <div class="flex gap-2 flex-wrap relative">
+        <div class="flex gap-2 flex-wrap">
           <button @click="connectFolder()" class="badge cursor-pointer" :class="dirHandle ? 'badge-teal' : 'badge-gray'">
             <span x-show="dirHandle">🔗 Đã kết nối: <span x-text="dirHandle && dirHandle.name"></span></span>
             <span x-show="!dirHandle">☁ Chọn thư mục lưu trữ (Máy tính / Google Drive)</span>
@@ -117,49 +117,50 @@
             <span x-show="currentKey">🔑 Đã có API Key Gemini</span>
             <span x-show="!currentKey">🔑 Chưa nhập API Key</span>
           </button>
+        </div>
 
-          <!-- API key settings panel (Giao diện nguyên bản) -->
-          <div x-show="showApiKeyPanel" x-cloak class="card p-4 mt-10 space-y-3 shadow-sm absolute right-0 top-full w-full max-w-sm" style="min-width: 320px;">
-            <div>
-              <p class="font-semibold text-sm">Nhà cung cấp AI đọc ảnh: Google Gemini</p>
-              <p class="text-xs mt-1" style="color:var(--ink-soft)">
-                Lấy key miễn phí tại <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener" class="underline font-semibold" style="color:var(--teal)">Google AI Studio</a>.
-              </p>
-            </div>
+        <!-- API key settings panel (Giao diện pop-up) -->
+        <div x-show="showApiKeyPanel" x-cloak class="card p-4 mt-2 space-y-3 shadow-sm absolute right-0 top-full w-full max-w-sm z-50" style="min-width: 320px;">
+          <div>
+            <p class="font-semibold text-sm">Nhà cung cấp AI đọc ảnh: Google Gemini</p>
+            <p class="text-xs mt-1" style="color:var(--ink-soft)">
+              Lấy key miễn phí tại <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener" class="underline font-semibold" style="color:var(--teal)">Google AI Studio</a>.
+            </p>
+          </div>
 
-            <div class="flex gap-2 flex-wrap items-center">
-              <input :type="showApiKeyValue ? 'text' : 'password'" x-model="currentKey" @change="onApiKeyChange()" placeholder="Nhập API Key (AIza...)" class="text-sm" style="flex:1; min-width:180px">
-              <button @click="showApiKeyValue = !showApiKeyValue" class="btn-secondary px-3 py-2 rounded-xl text-sm" x-text="showApiKeyValue ? 'Ẩn' : 'Hiện'"></button>
-            </div>
-            <label class="flex items-start gap-2 text-xs" style="color:var(--ink-soft)">
-              <input type="checkbox" x-model="rememberApiKey" @change="onApiKeyChange()" class="mt-0.5">
-              <span>Ghi nhớ API key trên trình duyệt này (chỉ lưu cục bộ trên máy này).</span>
-            </label>
+          <div class="flex gap-2 flex-wrap items-center">
+            <input :type="showApiKeyValue ? 'text' : 'password'" x-model="currentKey" @change="onApiKeyChange()" placeholder="Nhập API Key (AIza...)" class="text-sm" style="flex:1; min-width:180px">
+            <button @click="showApiKeyValue = !showApiKeyValue" class="btn-secondary px-3 py-2 rounded-xl text-sm" x-text="showApiKeyValue ? 'Ẩn' : 'Hiện'"></button>
+          </div>
+          <label class="flex items-start gap-2 text-xs" style="color:var(--ink-soft)">
+            <input type="checkbox" x-model="rememberApiKey" @change="onApiKeyChange()" class="mt-0.5">
+            <span>Ghi nhớ API key trên trình duyệt này (chỉ lưu cục bộ trên máy này).</span>
+          </label>
 
-            <div class="pt-3 border-t" style="border-color:var(--line)">
-              <div class="flex items-center justify-between gap-2 flex-wrap mb-2">
-                <p class="text-xs font-semibold uppercase tracking-wide" style="color:var(--ink-soft)">Model AI</p>
-                <button @click="fetchModels()" :disabled="modelsLoading" class="btn-secondary px-2.5 py-1 rounded-lg text-xs">
-                  <span x-show="!modelsLoading">🔄 Tải danh sách model</span>
-                  <span x-show="modelsLoading">Đang tải…</span>
-                </button>
-              </div>
-              <select x-model="currentModel" @change="onModelChange()" class="w-full text-sm" style="border:1px solid var(--line); border-radius:8px; padding:6px 8px; max-width: 400px;">
-                <template x-if="availableModels.length===0">
-                  <optgroup label="Mặc định">
-                    <option value="gemini-1.5-flash">gemini-1.5-flash</option>
-                    <option value="gemini-1.5-pro">gemini-1.5-pro</option>
-                    <option value="gemini-2.0-flash">gemini-2.0-flash</option>
-                  </optgroup>
-                </template>
-                <template x-for="m in availableModels" :key="m.id">
-                  <option :value="m.id" x-text="m.label + ' (' + m.id + ')'"></option>
-                </template>
-              </select>
-              <p x-show="modelsFetchError" x-text="modelsFetchError" class="text-xs mt-1" style="color:var(--brick)"></p>
+          <div class="pt-3 border-t" style="border-color:var(--line)">
+            <div class="flex items-center justify-between gap-2 flex-wrap mb-2">
+              <p class="text-xs font-semibold uppercase tracking-wide" style="color:var(--ink-soft)">Model AI</p>
+              <button @click="fetchModels()" :disabled="modelsLoading" class="btn-secondary px-2.5 py-1 rounded-lg text-xs">
+                <span x-show="!modelsLoading">🔄 Tải danh sách model</span>
+                <span x-show="modelsLoading">Đang tải…</span>
+              </button>
             </div>
+            <select x-model="currentModel" @change="onModelChange()" class="w-full text-sm" style="border:1px solid var(--line); border-radius:8px; padding:6px 8px;">
+              <template x-if="availableModels.length===0">
+                <optgroup label="Mặc định">
+                  <option value="gemini-1.5-flash">gemini-1.5-flash</option>
+                  <option value="gemini-1.5-pro">gemini-1.5-pro</option>
+                  <option value="gemini-2.0-flash">gemini-2.0-flash</option>
+                </optgroup>
+              </template>
+              <template x-for="m in availableModels" :key="m.id">
+                <option :value="m.id" x-text="m.label + ' (' + m.id + ')'"></option>
+              </template>
+            </select>
+            <p x-show="modelsFetchError" x-text="modelsFetchError" class="text-xs mt-1" style="color:var(--brick)"></p>
           </div>
         </div>
+
       </div>
     </div>
   </header>
@@ -1029,7 +1030,7 @@
           for(let r=0; r<Math.min(15, rows.length); r++){
             const row = rows[r] || [];
             
-            // Tìm cột chứa Tên NCC (so sánh chính xác hoặc gần chính xác để tránh nhầm với Tiêu đề bảng)
+            // Tìm cột chứa Tên NCC (bỏ qua dòng "DANH SÁCH NHÀ CUNG CẤP" tiêu đề trên cùng)
             let foundName = row.findIndex(c => {
                 if(typeof c !== 'string') return false;
                 const s = c.toLowerCase().trim();
@@ -1102,8 +1103,8 @@
               const hasStt = rows.some(r => r.some(c => typeof c === 'string' && /^\s*(stt|tt)\s*$/i.test(c)));
               const hasNcc = rows.some(r => r.some(c => typeof c === 'string' && /nhà cung cấp|tên ncc/i.test(c.toLowerCase())));
               
-              if(hasStt) score += 1000;
-              if(hasNcc) score += 1000;
+              if(hasStt) score += 100;
+              if(hasNcc) score += 100;
               score += rows.length; // Ưu tiên sheet có nhiều dòng dữ liệu hơn
               
               if(score > bestScore){ bestScore = score; best = name; }
@@ -1133,7 +1134,6 @@
               return; 
           }
           this.suppliers = [...this.catalogParsedSuppliers];
-          this.usingCustomCatalog = true;
           try { 
               localStorage.setItem('ndhy_suppliers_override', JSON.stringify(this.suppliers)); 
               alert('Cập nhật danh mục thành công!');
